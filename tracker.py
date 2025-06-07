@@ -77,21 +77,28 @@ for player in players:
     win_counter = defaultdict(int)
     recent_game_minutes = None
     valid = False
+    ranked_matches_counted = 0
 
-    for i, match_id in enumerate(match_ids):
+    for match_id in match_ids:
+        if ranked_matches_counted >= MATCH_COUNT:
+            break
+
         match_url = f"https://{platform_routing}.api.riotgames.com/lol/match/v5/matches/{match_id}"
         match_data = riot_get(match_url)
         if not match_data:
             continue
 
         info = match_data.get("info", {})
+        if info.get("queueId") != 420:
+            continue
+
         participants = info.get("participants", [])
         player_data = next((p for p in participants if p["puuid"] == puuid), None)
         if not player_data:
             continue
 
-        end_timestamp = info.get("gameEndTimestamp")
-        if i == 0:
+        if ranked_matches_counted == 0:
+            end_timestamp = info.get("gameEndTimestamp")
             now = datetime.now(timezone.utc).timestamp() * 1000
             recent_game_minutes = round((now - end_timestamp) / (1000 * 60), 1)
             if recent_game_minutes > 10:
@@ -105,7 +112,10 @@ for player in players:
         if win:
             win_counter[champ] += 1
 
+        ranked_matches_counted += 1
         time.sleep(0.1)
+
+
 
     if valid:
         print(f"\n{name} | {lp} LP")
