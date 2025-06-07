@@ -67,6 +67,18 @@ for player in players:
 
     if not (LP_MIN <= lp <= LP_MAX):
         continue
+    
+    summoner_url = f"https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
+    summoner_data = riot_get(summoner_url)
+    if not summoner_data:
+        continue
+    summoner_id = summoner_data.get("id")
+
+    active_game_url = f"https://na1.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/{summoner_id}"
+    active_game = riot_get(active_game_url)
+    if active_game:
+        continue
+
 
     match_ids_url = f"https://{platform_routing}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={MATCH_COUNT}"
     match_ids = riot_get(match_ids_url)
